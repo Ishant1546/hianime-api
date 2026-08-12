@@ -80,7 +80,18 @@ app.route('/api/v1', hiAnimeRoutes);
 app.get('/api', (c) => {
   return c.redirect('/');
 });
-app.get('/docs', (c) => c.json(hianimeApiDocs));
+app.get('/docs', (c) => {
+  // Detect actual deployment URL from request — works on Vercel, Railway, any host
+  const proto = c.req.header('x-forwarded-proto') || 'https';
+  const host  = c.req.header('x-forwarded-host') || c.req.header('host') || '';
+  const dynamicBaseUrl = host ? `${proto}://${host}` : config.baseUrl;
+
+  const docs = {
+    ...hianimeApiDocs,
+    servers: [{ url: `${dynamicBaseUrl}/api/${config.apiVersion}` }],
+  };
+  return c.json(docs);
+});
 app.get('/', swaggerUI({ url: '/docs' }));
 app.onError((err, c) => {
   if (err instanceof AppError) {
