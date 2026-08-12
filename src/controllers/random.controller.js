@@ -1,32 +1,30 @@
-import { axiosInstance } from '../services/axiosInstance.js';
+import { cfFetch } from '../services/cfBypass.js';
 import { validationError } from '../utils/errors.js';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 const randomController = async () => {
-    console.log('Fetching random anime...');
-    const result = await axiosInstance('/home');
+  const html = await cfFetch('/home');
+  const $ = load(html);
 
-    if (!result.success) {
-        console.error('Random anime fetch failed:', result.message);
-        throw new validationError(result.message);
-    }
+  const ids = [];
+  // Collect from multiple sections for variety
+  $('.flw-item .film-detail .film-name .dynamic-name').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    const id = href.split('/').pop()?.split('?')[0];
+    if (id) ids.push(id);
+  });
 
-    const $ = cheerio.load(result.data);
+  // Also from spotlight
+  $('.deslide-wrap .desi-buttons a').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    const id = href.split('/').pop()?.split('?')[0];
+    if (id && !ids.includes(id)) ids.push(id);
+  });
 
-    const animes = [];
-    $('.flw-item').each((i, el) => {
-        const link = $(el).find('.film-name .dynamic-name').attr('href');
-        const id = link?.split('/').pop();
-        if (id) animes.push(id);
-    });
+  if (ids.length === 0) throw new validationError('No anime found on homepage');
 
-    if (animes.length === 0) {
-        throw new validationError('No anime found');
-    }
-
-    const randomId = animes[Math.floor(Math.random() * animes.length)];
-
-    return { id: randomId };
+  const randomId = ids[Math.floor(Math.random() * ids.length)];
+  return { id: randomId };
 };
 
 export default randomController;
