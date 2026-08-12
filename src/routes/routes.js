@@ -1,0 +1,66 @@
+import { Hono } from 'hono';
+import documentationController from '../controllers/documentation.controller.js';
+import handler from '../utils/handler.js';
+
+import homepageController from '../controllers/homepage.controller.js';
+import detailpageController from '../controllers/detailpage.controller.js';
+import listpageController from '../controllers/listpage.controller.js';
+import searchController from '../controllers/search.controller.js';
+import suggestionController from '../controllers/suggestion.controller.js';
+import charactersController from '../controllers/characters.controller.js';
+import characterDetailConroller from '../controllers/characterDetail.controller.js';
+import episodesController from '../controllers/episodes.controller.js';
+import serversController from '../controllers/serversController.js';
+import streamController from '../controllers/streamController.js';
+import allGenresController from '../controllers/allGenres.controller.js';
+import nextEpisodeScheduleController from '../controllers/nextEpisodeSchedule.controller.js';
+import filterController from '../controllers/filter.controller.js';
+import filterOptions from '../utils/filter.js';
+import clearCacheController from '../controllers/clearCache.controller.js';
+import newsController from '../controllers/news.controller.js';
+import watch2getherController from '../controllers/watch2gether.controller.js';
+import randomController from '../controllers/random.controller.js';
+
+import schedulesController from '../controllers/schedules.controller.js';
+import embedController from '../controllers/embedController.js';
+import proxyController from '../controllers/proxy.controller.js';
+import m3u8ProxyController from '../controllers/m3u8ProxyController.js';
+
+const router = new Hono();
+
+router.get('/', handler(documentationController));
+router.get('/home', handler(homepageController));
+router.get('/schedules', handler(schedulesController));
+router.get('/schedule/next/:id', handler(nextEpisodeScheduleController));
+router.get('/anime/:id', handler(detailpageController));
+router.get('/animes/:query/:category?', handler(listpageController));
+router.get('/search', handler(searchController));
+router.get(
+  '/filter/options',
+  handler(() => filterOptions)
+);
+router.get('/filter', handler(filterController));
+router.get('/suggestion', handler(suggestionController));
+router.get('/characters/:id', handler(charactersController));
+router.get('/character/:id', handler(characterDetailConroller));
+router.get('/episodes/:id', handler(episodesController));
+router.get('/servers', handler(serversController));
+router.get('/stream', handler(streamController));
+router.get('/embed/:server/:id/:type', embedController);
+router.get('/embed', embedController);
+router.get('/embed/proxy', m3u8ProxyController);
+router.get('/proxy', proxyController);
+router.options('/proxy', (c) => {
+  c.header('Access-Control-Allow-Origin', '*');
+  c.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Range, Content-Type, Accept, Accept-Encoding');
+  c.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges, Cache-Control');
+  return c.text('', 204);
+});
+router.get('/genres', handler(allGenresController));
+router.get('/news', handler(newsController));
+router.get('/watch2gether', handler(watch2getherController));
+router.get('/random', handler(randomController));
+router.get('/admin/clear-cache', handler(clearCacheController));
+
+export default router;

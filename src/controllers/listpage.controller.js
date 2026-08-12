@@ -1,0 +1,59 @@
+import { extractListPage } from '../extractor/extractListpage.js';
+import { axiosInstance } from '../services/axiosInstance.js';
+import { NotFoundError, validationError } from '../utils/errors.js';
+
+const listpageController = async (c) => {
+  const validateQueries = [
+    'top-airing',
+    'most-popular',
+    'most-favorite',
+    'completed',
+    'recently-added',
+    'recently-updated',
+    'top-upcoming',
+    'genre',
+    'producer',
+    'az-list',
+    'subbed-anime',
+    'dubbed-anime',
+    'movie',
+    'tv',
+    'ova',
+    'ona',
+    'special',
+    'events',
+  ];
+  const query = c.req.param('query').toLowerCase() || null;
+
+  if (!validateQueries.includes(query))
+    throw new validationError('invalid query', { validateQueries });
+
+  let category = c.req.param('category') || null;
+
+  const page = c.req.query('page') || 1;
+
+  if ((query === 'genre' || query === 'producer') && !category) {
+    throw new validationError(`category is require for query ${query}`);
+  }
+  if (query !== 'genre' && query !== 'producer' && query !== 'az-list' && category) {
+    category = null;
+  }
+
+  let nromalizeCategory = category && category.replaceAll(' ', '-').toLowerCase();
+  if (nromalizeCategory === 'martial-arts') nromalizeCategory = 'marial-arts';
+  const endpoint = category
+    ? `/${query}/${nromalizeCategory}?page=${page}`
+    : `/${query}?page=${page}`;
+
+  const result = await axiosInstance(endpoint);
+
+  if (!result.success) {
+    throw new validationError('make sure given endpoint is correct');
+  }
+  const response = extractListPage(result.data);
+
+  if (response.response.length < 1) throw new NotFoundError();
+  return response;
+};
+
+export default listpageController;
