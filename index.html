@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AnimeVerse - Powered by HiAnime API</title>
+  <title>Simple Iframe Player</title>
   <style>
     :root {
-      --bg-main: #0b0f19;
-      --bg-card: #151c2c;
-      --bg-secondary: #1e293b;
-      --accent: #ef4444;
-      --accent-hover: #dc2626;
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #3b82f6;
       --border-color: #334155;
     }
 
@@ -20,526 +17,141 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      padding-bottom: 50px;
-    }
-
-    /* Navbar */
-    header {
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      padding: 12px 24px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       display: flex;
+      justify-content: center;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--accent);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .search-box {
-      display: flex;
-      gap: 8px;
-      flex: 1;
-      max-width: 500px;
-    }
-
-    input, select {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 8px 12px;
-      border-radius: 6px;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--accent);
-    }
-
-    .search-box input {
-      width: 100%;
-    }
-
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background: var(--accent-hover);
-    }
-
-    /* Container Layout */
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
+      min-height: 100vh;
       padding: 20px;
     }
 
-    /* Video Player */
-    .player-section {
-      background: #000;
+    .player-container {
+      width: 100%;
+      max-width: 900px;
+      background: var(--card-bg);
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 24px;
-      display: none;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-color);
     }
 
-    .player-wrapper {
+    /* Responsive 16:9 Aspect Ratio Box */
+    .responsive-iframe-wrapper {
       position: relative;
-      aspect-ratio: 16 / 9;
       width: 100%;
+      padding-top: 56.25%; /* 16:9 aspect ratio */
+      background-color: #000;
     }
 
-    iframe {
+    .responsive-iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      border: none;
+      border: 0;
     }
 
-    .player-controls {
-      background: var(--bg-card);
-      padding: 12px 16px;
+    .controls-bar {
+      padding: 16px;
       display: flex;
       flex-wrap: wrap;
+      gap: 12px;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
       border-top: 1px solid var(--border-color);
     }
 
-    .server-pills {
+    .input-group {
       display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .pill {
-      background: var(--bg-secondary);
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border: 1px solid transparent;
-    }
-
-    .pill.active {
-      background: var(--accent);
-      color: white;
-    }
-
-    /* Spotlight Carousel */
-    .spotlight-card {
-      background: linear-gradient(180deg, rgba(15,23,42,0.2) 0%, var(--bg-card) 100%), var(--hero-bg) center/cover;
-      border-radius: 12px;
-      padding: 30px;
-      min-height: 280px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      margin-bottom: 30px;
-      border: 1px solid var(--border-color);
-    }
-
-    .spotlight-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .spotlight-desc {
-      font-size: 0.9rem;
-      color: var(--text-sub);
-      max-width: 600px;
-      margin-bottom: 16px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    /* Content Grids */
-    .section-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 18px;
-      margin-bottom: 36px;
-    }
-
-    .anime-card {
-      background: var(--bg-card);
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-      border: 1px solid var(--border-color);
-      transition: transform 0.2s, border-color 0.2s;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .anime-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--accent);
-    }
-
-    .card-img-wrapper {
-      position: relative;
-      aspect-ratio: 3 / 4;
-    }
-
-    .card-img-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .badge-subdub {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      background: rgba(0,0,0,0.8);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      display: flex;
-      gap: 6px;
-    }
-
-    .card-details {
-      padding: 10px;
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .card-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 4px;
-    }
-
-    .card-meta {
-      font-size: 0.75rem;
-      color: var(--text-sub);
-    }
-
-    /* Episode Selector Grid */
-    .episodes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
       gap: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-      padding: 12px;
-      background: var(--bg-card);
-      border-radius: 8px;
-      margin-bottom: 24px;
-      border: 1px solid var(--border-color);
+      min-width: 280px;
     }
 
-    .ep-btn {
-      background: var(--bg-main);
-      color: var(--text-main);
-      padding: 8px 0;
-      text-align: center;
-      border-radius: 4px;
-      font-size: 0.85rem;
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-color);
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent-color);
+    }
+
+    button {
+      padding: 8px 16px;
+      background: var(--accent-color);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
       cursor: pointer;
-      border: 1px solid var(--border-color);
+      transition: opacity 0.2s;
     }
 
-    .ep-btn:hover, .ep-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .spinner {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-sub);
+    button:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo" onclick="loadHomepage()">
-      🎬 AnimeVerse
+  <div class="player-container">
+    <!-- 16:9 Responsive Iframe Box -->
+    <div class="responsive-iframe-wrapper">
+      <iframe 
+        id="mainPlayer"
+        src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+        title="Video Player"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen>
+      </iframe>
     </div>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search anime (e.g., Solo Leveling, Naruto)..." onkeydown="if(event.key==='Enter') searchAnime()">
-      <button onclick="searchAnime()">Search</button>
-    </div>
-  </header>
 
-  <div class="container">
-
-    <!-- Active Video Player Section -->
-    <div class="player-section" id="playerSection">
-      <div class="player-wrapper">
-        <iframe id="videoIframe" allowfullscreen></iframe>
-      </div>
-      <div class="player-controls">
-        <div id="playingTitle" style="font-weight: 600;">Select an episode</div>
-        <div class="server-pills">
-          <span style="font-size: 0.85rem; color: var(--text-sub);">Audio:</span>
-          <button class="pill active" id="btnSub" onclick="switchCategory('sub')">Sub</button>
-          <button class="pill" id="btnDub" onclick="switchCategory('dub')">Dub</button>
-          <span style="font-size: 0.85rem; color: var(--text-sub); margin-left: 8px;">Server:</span>
-          <select id="serverSelect" onchange="changeServer()" style="padding: 4px 8px; font-size: 0.85rem;">
-            <option value="hd-2">HD-2</option>
-            <option value="hd-1">HD-1</option>
-          </select>
-        </div>
+    <!-- Controls to Switch URL -->
+    <div class="controls-bar">
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="videoUrlInput" 
+          placeholder="Paste embed URL or iframe link..." 
+          value="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" 
+        />
+        <button onclick="updatePlayerSource()">Load Video</button>
       </div>
     </div>
-
-    <!-- Episode Selection List -->
-    <div id="episodeSection" style="display: none;">
-      <div class="section-title">
-        <span id="episodeTitle">Episodes</span>
-      </div>
-      <div class="episodes-grid" id="episodesGrid"></div>
-    </div>
-
-    <!-- Spotlight Banner -->
-    <div id="spotlightContainer"></div>
-
-    <!-- Main Dynamic Content Grid -->
-    <div id="mainContent">
-      <div class="spinner">Loading Content from HiAnime API...</div>
-    </div>
-
   </div>
 
   <script>
-    const API_BASE = "https://hianime-api-private.onrender.com/api/v1";
+    function updatePlayerSource() {
+      const inputVal = document.getElementById('videoUrlInput').value.trim();
+      const playerFrame = document.getElementById('mainPlayer');
 
-    let currentAnimeId = null;
-    let currentEpisodeId = null;
-    let currentCategory = "sub";
-    let currentServer = "hd-2";
+      if (!inputVal) return;
 
-    document.addEventListener("DOMContentLoaded", loadHomepage);
-
-    // 1. Fetch Homepage Content
-    async function loadHomepage() {
-      hidePlayerAndEpisodes();
-      const mainContent = document.getElementById('mainContent');
-      const spotlightContainer = document.getElementById('spotlightContainer');
-      mainContent.innerHTML = `<div class="spinner">Loading homepage content...</div>`;
-
-      try {
-        const res = await fetch(`${API_BASE}/home`);
-        const json = await res.json();
-        
-        // Exact schema mapping per README: { success: true, data: { spotlight: [], trending: [], ... } }
-        const data = json.data || {};
-
-        // Render Spotlight Hero Banner
-        if (data.spotlight && data.spotlight.length > 0) {
-          const hero = data.spotlight[0];
-          spotlightContainer.innerHTML = `
-            <div class="spotlight-card" style="--hero-bg: url('${hero.poster}')">
-              <div style="background: rgba(0,0,0,0.6); padding: 16px; border-radius: 8px;">
-                <div class="spotlight-title">${hero.title || hero.name}</div>
-                <div class="spotlight-desc">${hero.description || hero.synopsis || ''}</div>
-                <button onclick="playAnime('${hero.id}')">Watch Now</button>
-              </div>
-            </div>
-          `;
-        }
-
-        let html = "";
-        if (data.trending) html += renderGridSection("🔥 Trending Anime", data.trending);
-        if (data.latestEpisode) html += renderGridSection("⚡ Latest Episodes", data.latestEpisode);
-        if (data.topAiring) html += renderGridSection("🏆 Top Airing", data.topAiring);
-        if (data.mostPopular) html += renderGridSection("🌟 Most Popular", data.mostPopular);
-
-        mainContent.innerHTML = html || `<div class="spinner">No homepage data available.</div>`;
-
-      } catch (err) {
-        console.error("Error loading home:", err);
-        mainContent.innerHTML = `<div class="spinner">Failed to connect to API backend.</div>`;
-      }
-    }
-
-    // 2. Search Anime (Correct param: keyword)
-    async function searchAnime() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) return;
-
-      hidePlayerAndEpisodes();
-      document.getElementById('spotlightContainer').innerHTML = "";
-      const mainContent = document.getElementById('mainContent');
-      mainContent.innerHTML = `<div class="spinner">Searching for "${query}"...</div>`;
-
-      try {
-        const res = await fetch(`${API_BASE}/search?keyword=${encodeURIComponent(query)}&page=1`);
-        const json = await res.json();
-        const results = json.data?.animes || [];
-
-        if (results.length === 0) {
-          mainContent.innerHTML = `<div class="spinner">No anime found for "${query}"</div>`;
+      // Extract src if an entire <iframe> HTML snippet was pasted
+      if (inputVal.startsWith('<iframe')) {
+        const srcMatch = inputVal.match(/src=["']([^"']+)["']/);
+        if (srcMatch && srcMatch[1]) {
+          playerFrame.src = srcMatch[1];
           return;
         }
-
-        mainContent.innerHTML = renderGridSection(`Search Results for "${query}"`, results);
-      } catch (err) {
-        console.error("Search error:", err);
-        mainContent.innerHTML = `<div class="spinner">Error performing search.</div>`;
       }
-    }
 
-    // 3. Grid Renderer
-    function renderGridSection(title, list) {
-      return `
-        <div class="section-title">${title}</div>
-        <div class="grid">
-          ${list.map(anime => {
-            const animeTitle = anime.title || anime.name || "Untitled";
-            const subEps = anime.episodes?.sub || (typeof anime.episodes === 'number' ? anime.episodes : null);
-            const dubEps = anime.episodes?.dub || null;
-
-            return `
-              <div class="anime-card" onclick="playAnime('${anime.id}')">
-                <div class="card-img-wrapper">
-                  <img src="${anime.poster}" alt="${animeTitle}" loading="lazy">
-                  <div class="badge-subdub">
-                    ${subEps ? `<span>SUB: ${subEps}</span>` : ''}
-                    ${dubEps ? `<span>DUB: ${dubEps}</span>` : ''}
-                  </div>
-                </div>
-                <div class="card-details">
-                  <div class="card-title">${animeTitle}</div>
-                  <div class="card-meta">${anime.type || 'TV'} ${anime.duration ? '• ' + anime.duration : ''}</div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-
-    // 4. Play Anime & Fetch Episodes
-    async function playAnime(animeId) {
-      currentAnimeId = animeId;
-      const episodeSection = document.getElementById('episodeSection');
-      const episodesGrid = document.getElementById('episodesGrid');
-      
-      episodeSection.style.display = "block";
-      episodesGrid.innerHTML = `<div style="color: var(--text-sub);">Loading episodes...</div>`;
-
-      try {
-        const res = await fetch(`${API_BASE}/episodes/${animeId}`);
-        const json = await res.json();
-        const episodes = json.data?.episodes || [];
-
-        if (episodes.length === 0) {
-          episodesGrid.innerHTML = `<div style="color: var(--text-sub);">No episodes found.</div>`;
-          return;
-        }
-
-        document.getElementById('episodeTitle').innerText = `Episodes (${episodes.length})`;
-
-        episodesGrid.innerHTML = episodes.map(ep => {
-          const epNum = ep.episodeNumber || ep.number;
-          const epId = ep.id || ep.episodeId;
-          return `
-            <div class="ep-btn ${currentEpisodeId === epId ? 'active' : ''}" 
-                 id="ep-${encodeURIComponent(epId)}" 
-                 onclick="loadEmbedStream('${epId}', '${epNum}')">
-              ${epNum}
-            </div>
-          `;
-        }).join('');
-
-        // Auto-play initial episode
-        const firstEp = episodes[0];
-        loadEmbedStream(firstEp.id || firstEp.episodeId, firstEp.episodeNumber || firstEp.number);
-
-      } catch (err) {
-        console.error("Error fetching episodes:", err);
-        episodesGrid.innerHTML = `<div style="color: var(--text-sub);">Failed to load episodes.</div>`;
-      }
-    }
-
-    // 5. Load Embedded Stream
-    function loadEmbedStream(episodeId, epNum) {
-      currentEpisodeId = episodeId;
-
-      document.querySelectorAll('.ep-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(`ep-${encodeURIComponent(episodeId)}`);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      const playerSection = document.getElementById('playerSection');
-      const videoIframe = document.getElementById('videoIframe');
-      const playingTitle = document.getElementById('playingTitle');
-
-      playerSection.style.display = "block";
-      if (epNum) playingTitle.innerText = `Playing Episode ${epNum}`;
-
-      // GET /api/v1/embed/:server/:id/:type
-      const embedUrl = `${API_BASE}/embed/${currentServer}/${encodeURIComponent(episodeId)}/${currentCategory}`;
-      videoIframe.src = embedUrl;
-
-      playerSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function switchCategory(type) {
-      currentCategory = type;
-      document.getElementById('btnSub').classList.toggle('active', type === 'sub');
-      document.getElementById('btnDub').classList.toggle('active', type === 'dub');
-      if (currentEpisodeId) loadEmbedStream(currentEpisodeId, '');
-    }
-
-    function changeServer() {
-      currentServer = document.getElementById('serverSelect').value;
-      if (currentEpisodeId) loadEmbedStream(currentEpisodeId, '');
-    }
-
-    function hidePlayerAndEpisodes() {
-      document.getElementById('playerSection').style.display = "none";
-      document.getElementById('episodeSection').style.display = "none";
-      document.getElementById('videoIframe').src = "";
+      // Otherwise treat as direct URL
+      playerFrame.src = inputVal;
     }
   </script>
+
 </body>
 </html>
