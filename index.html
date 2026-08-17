@@ -92,14 +92,14 @@
       background: var(--accent-hover);
     }
 
-    /* Main Layout */
+    /* Container Layout */
     .container {
       max-width: 1280px;
       margin: 0 auto;
       padding: 20px;
     }
 
-    /* Video Player Section */
+    /* Video Player */
     .player-section {
       background: #000;
       border-radius: 12px;
@@ -152,7 +152,7 @@
       color: white;
     }
 
-    /* Hero Spotlight Carousel */
+    /* Spotlight Carousel */
     .spotlight-card {
       background: linear-gradient(180deg, rgba(15,23,42,0.2) 0%, var(--bg-card) 100%), var(--hero-bg) center/cover;
       border-radius: 12px;
@@ -182,7 +182,7 @@
       overflow: hidden;
     }
 
-    /* Section Grids */
+    /* Content Grids */
     .section-title {
       font-size: 1.25rem;
       font-weight: 600;
@@ -260,7 +260,7 @@
       color: var(--text-sub);
     }
 
-    /* Episode Drawer */
+    /* Episode Selector Grid */
     .episodes-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
@@ -290,39 +290,6 @@
       border-color: var(--accent);
     }
 
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: var(--bg-card);
-      border-radius: 12px;
-      max-width: 600px;
-      width: 100%;
-      padding: 24px;
-      position: relative;
-      border: 1px solid var(--border-color);
-      max-height: 85vh;
-      overflow-y: auto;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 12px; right: 16px;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--text-sub);
-    }
-
-    /* Loading Spinner */
     .spinner {
       text-align: center;
       padding: 40px;
@@ -357,14 +324,14 @@
           <button class="pill" id="btnDub" onclick="switchCategory('dub')">Dub</button>
           <span style="font-size: 0.85rem; color: var(--text-sub); margin-left: 8px;">Server:</span>
           <select id="serverSelect" onchange="changeServer()" style="padding: 4px 8px; font-size: 0.85rem;">
-            <option value="hd-2">HD-2 (Default)</option>
+            <option value="hd-2">HD-2</option>
             <option value="hd-1">HD-1</option>
           </select>
         </div>
       </div>
     </div>
 
-    <!-- Dynamic Episode List -->
+    <!-- Episode Selection List -->
     <div id="episodeSection" style="display: none;">
       <div class="section-title">
         <span id="episodeTitle">Episodes</span>
@@ -375,19 +342,11 @@
     <!-- Spotlight Banner -->
     <div id="spotlightContainer"></div>
 
-    <!-- Dynamic Main Content Grid -->
+    <!-- Main Dynamic Content Grid -->
     <div id="mainContent">
       <div class="spinner">Loading Content from HiAnime API...</div>
     </div>
 
-  </div>
-
-  <!-- Detail Modal -->
-  <div class="modal" id="animeModal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-      <div id="modalBody">Loading details...</div>
-    </div>
   </div>
 
   <script>
@@ -398,10 +357,9 @@
     let currentCategory = "sub";
     let currentServer = "hd-2";
 
-    // Initialize Page
     document.addEventListener("DOMContentLoaded", loadHomepage);
 
-    // 1. Fetch & Render Homepage Data
+    // 1. Fetch Homepage Content
     async function loadHomepage() {
       hidePlayerAndEpisodes();
       const mainContent = document.getElementById('mainContent');
@@ -411,36 +369,31 @@
       try {
         const res = await fetch(`${API_BASE}/home`);
         const json = await res.json();
-        const data = json.data || json;
+        
+        // Exact schema mapping per README: { success: true, data: { spotlight: [], trending: [], ... } }
+        const data = json.data || {};
 
-        // Render Spotlight Carousel (Item 0)
-        if (data.spotlightAnimes && data.spotlightAnimes.length > 0) {
-          const hero = data.spotlightAnimes[0];
+        // Render Spotlight Hero Banner
+        if (data.spotlight && data.spotlight.length > 0) {
+          const hero = data.spotlight[0];
           spotlightContainer.innerHTML = `
             <div class="spotlight-card" style="--hero-bg: url('${hero.poster}')">
               <div style="background: rgba(0,0,0,0.6); padding: 16px; border-radius: 8px;">
-                <div class="spotlight-title">${hero.name}</div>
-                <div class="spotlight-desc">${hero.description || ''}</div>
+                <div class="spotlight-title">${hero.title || hero.name}</div>
+                <div class="spotlight-desc">${hero.description || hero.synopsis || ''}</div>
                 <button onclick="playAnime('${hero.id}')">Watch Now</button>
               </div>
             </div>
           `;
         }
 
-        // Build Homepage Grids
         let html = "";
+        if (data.trending) html += renderGridSection("🔥 Trending Anime", data.trending);
+        if (data.latestEpisode) html += renderGridSection("⚡ Latest Episodes", data.latestEpisode);
+        if (data.topAiring) html += renderGridSection("🏆 Top Airing", data.topAiring);
+        if (data.mostPopular) html += renderGridSection("🌟 Most Popular", data.mostPopular);
 
-        if (data.trendingAnimes) {
-          html += renderGridSection("🔥 Trending Anime", data.trendingAnimes);
-        }
-        if (data.latestEpisodeAnimes) {
-          html += renderGridSection("⚡ Latest Episodes", data.latestEpisodeAnimes);
-        }
-        if (data.topAiringAnimes) {
-          html += renderGridSection("🏆 Top Airing", data.topAiringAnimes);
-        }
-
-        mainContent.innerHTML = html;
+        mainContent.innerHTML = html || `<div class="spinner">No homepage data available.</div>`;
 
       } catch (err) {
         console.error("Error loading home:", err);
@@ -448,7 +401,7 @@
       }
     }
 
-    // 2. Search Functionality
+    // 2. Search Anime (Correct param: keyword)
     async function searchAnime() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;
@@ -459,9 +412,9 @@
       mainContent.innerHTML = `<div class="spinner">Searching for "${query}"...</div>`;
 
       try {
-        const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}&page=1`);
+        const res = await fetch(`${API_BASE}/search?keyword=${encodeURIComponent(query)}&page=1`);
         const json = await res.json();
-        const results = json.data?.animes || json.animes || [];
+        const results = json.data?.animes || [];
 
         if (results.length === 0) {
           mainContent.innerHTML = `<div class="spinner">No anime found for "${query}"</div>`;
@@ -475,31 +428,37 @@
       }
     }
 
-    // 3. Render Helper for Grid Cards
+    // 3. Grid Renderer
     function renderGridSection(title, list) {
       return `
         <div class="section-title">${title}</div>
         <div class="grid">
-          ${list.map(anime => `
-            <div class="anime-card" onclick="playAnime('${anime.id}')">
-              <div class="card-img-wrapper">
-                <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
-                <div class="badge-subdub">
-                  ${anime.episodes?.sub ? `<span>SUB: ${anime.episodes.sub}</span>` : ''}
-                  ${anime.episodes?.dub ? `<span>DUB: ${anime.episodes.dub}</span>` : ''}
+          ${list.map(anime => {
+            const animeTitle = anime.title || anime.name || "Untitled";
+            const subEps = anime.episodes?.sub || (typeof anime.episodes === 'number' ? anime.episodes : null);
+            const dubEps = anime.episodes?.dub || null;
+
+            return `
+              <div class="anime-card" onclick="playAnime('${anime.id}')">
+                <div class="card-img-wrapper">
+                  <img src="${anime.poster}" alt="${animeTitle}" loading="lazy">
+                  <div class="badge-subdub">
+                    ${subEps ? `<span>SUB: ${subEps}</span>` : ''}
+                    ${dubEps ? `<span>DUB: ${dubEps}</span>` : ''}
+                  </div>
+                </div>
+                <div class="card-details">
+                  <div class="card-title">${animeTitle}</div>
+                  <div class="card-meta">${anime.type || 'TV'} ${anime.duration ? '• ' + anime.duration : ''}</div>
                 </div>
               </div>
-              <div class="card-details">
-                <div class="card-title">${anime.name}</div>
-                <div class="card-meta">${anime.type || 'TV'}</div>
-              </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       `;
     }
 
-    // 4. Play Anime (Fetch Episodes)
+    // 4. Play Anime & Fetch Episodes
     async function playAnime(animeId) {
       currentAnimeId = animeId;
       const episodeSection = document.getElementById('episodeSection');
@@ -511,7 +470,7 @@
       try {
         const res = await fetch(`${API_BASE}/episodes/${animeId}`);
         const json = await res.json();
-        const episodes = json.data?.episodes || json.episodes || [];
+        const episodes = json.data?.episodes || [];
 
         if (episodes.length === 0) {
           episodesGrid.innerHTML = `<div style="color: var(--text-sub);">No episodes found.</div>`;
@@ -520,16 +479,21 @@
 
         document.getElementById('episodeTitle').innerText = `Episodes (${episodes.length})`;
 
-        episodesGrid.innerHTML = episodes.map(ep => `
-          <div class="ep-btn ${currentEpisodeId === ep.episodeId ? 'active' : ''}" 
-               id="ep-${ep.episodeId}" 
-               onclick="loadEmbedStream('${ep.episodeId}', '${ep.number}')">
-            ${ep.number}
-          </div>
-        `).join('');
+        episodesGrid.innerHTML = episodes.map(ep => {
+          const epNum = ep.episodeNumber || ep.number;
+          const epId = ep.id || ep.episodeId;
+          return `
+            <div class="ep-btn ${currentEpisodeId === epId ? 'active' : ''}" 
+                 id="ep-${encodeURIComponent(epId)}" 
+                 onclick="loadEmbedStream('${epId}', '${epNum}')">
+              ${epNum}
+            </div>
+          `;
+        }).join('');
 
-        // Auto-play Episode 1
-        loadEmbedStream(episodes[0].episodeId, episodes[0].number);
+        // Auto-play initial episode
+        const firstEp = episodes[0];
+        loadEmbedStream(firstEp.id || firstEp.episodeId, firstEp.episodeNumber || firstEp.number);
 
       } catch (err) {
         console.error("Error fetching episodes:", err);
@@ -537,13 +501,12 @@
       }
     }
 
-    // 5. Load Embedded Video Player
-    async function loadEmbedStream(episodeId, epNum) {
+    // 5. Load Embedded Stream
+    function loadEmbedStream(episodeId, epNum) {
       currentEpisodeId = episodeId;
 
-      // Update UI Active State
       document.querySelectorAll('.ep-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(`ep-${episodeId}`);
+      const activeBtn = document.getElementById(`ep-${encodeURIComponent(episodeId)}`);
       if (activeBtn) activeBtn.classList.add('active');
 
       const playerSection = document.getElementById('playerSection');
@@ -551,42 +514,31 @@
       const playingTitle = document.getElementById('playingTitle');
 
       playerSection.style.display = "block";
-      playingTitle.innerText = `Playing Episode ${epNum}`;
+      if (epNum) playingTitle.innerText = `Playing Episode ${epNum}`;
 
-      // Construct Embed URL using GET /embed/{server}/{id}/{type}
-      const embedUrl = `${API_BASE}/embed/${currentServer}/${episodeId}/${currentCategory}`;
+      // GET /api/v1/embed/:server/:id/:type
+      const embedUrl = `${API_BASE}/embed/${currentServer}/${encodeURIComponent(episodeId)}/${currentCategory}`;
       videoIframe.src = embedUrl;
 
-      // Smooth scroll to video player
       playerSection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Switch Sub / Dub
     function switchCategory(type) {
       currentCategory = type;
       document.getElementById('btnSub').classList.toggle('active', type === 'sub');
       document.getElementById('btnDub').classList.toggle('active', type === 'dub');
-      if (currentEpisodeId) {
-        loadEmbedStream(currentEpisodeId, '');
-      }
+      if (currentEpisodeId) loadEmbedStream(currentEpisodeId, '');
     }
 
-    // Change Video Server (hd-1 vs hd-2)
     function changeServer() {
       currentServer = document.getElementById('serverSelect').value;
-      if (currentEpisodeId) {
-        loadEmbedStream(currentEpisodeId, '');
-      }
+      if (currentEpisodeId) loadEmbedStream(currentEpisodeId, '');
     }
 
     function hidePlayerAndEpisodes() {
       document.getElementById('playerSection').style.display = "none";
       document.getElementById('episodeSection').style.display = "none";
       document.getElementById('videoIframe').src = "";
-    }
-
-    function closeModal() {
-      document.getElementById('animeModal').style.display = "none";
     }
   </script>
 </body>
